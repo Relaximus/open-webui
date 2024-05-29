@@ -41,7 +41,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 COPY --chown=$UID:$GID ./backend/requirements.txt ./requirements.txt
 
 RUN pip3 install -r requirements.txt --no-cache-dir &&  \
-    du -h -d 2 /opt/venv/lib && \
+    du -h -d 2 /opt/venv/lib/python3.11/site-packages && \
     tar cfJ ./opt_venv.tar.xz /opt/venv && \
     du -hs ./opt_venv.tar.xz
 
