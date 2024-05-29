@@ -30,7 +30,7 @@ from apps.litellm.main import (
 
 from apps.audio.main import app as audio_app
 from apps.images.main import app as images_app
-from apps.rag.main import app as rag_app
+# from apps.rag.main import app as rag_app
 from apps.web.main import app as webui_app
 
 import asyncio
@@ -39,7 +39,7 @@ from typing import List
 
 
 from utils.utils import get_admin_user
-from apps.rag.utils import rag_messages
+# from apps.rag.utils import rag_messages
 
 from config import (
     CONFIG_DATA,
@@ -153,16 +153,16 @@ class RAGMiddleware(BaseHTTPMiddleware):
             # data["modified"] = True  # Example modification
             if "docs" in data:
                 data = {**data}
-                data["messages"], citations = rag_messages(
-                    docs=data["docs"],
-                    messages=data["messages"],
-                    template=rag_app.state.config.RAG_TEMPLATE,
-                    embedding_function=rag_app.state.EMBEDDING_FUNCTION,
-                    k=rag_app.state.config.TOP_K,
-                    reranking_function=rag_app.state.sentence_transformer_rf,
-                    r=rag_app.state.config.RELEVANCE_THRESHOLD,
-                    hybrid_search=rag_app.state.config.ENABLE_RAG_HYBRID_SEARCH,
-                )
+                # data["messages"], citations = rag_messages(
+                #     docs=data["docs"],
+                #     messages=data["messages"],
+                #     template=rag_app.state.config.RAG_TEMPLATE,
+                #     embedding_function=rag_app.state.EMBEDDING_FUNCTION,
+                #     k=rag_app.state.config.TOP_K,
+                #     reranking_function=rag_app.state.sentence_transformer_rf,
+                #     r=rag_app.state.config.RELEVANCE_THRESHOLD,
+                #     hybrid_search=rag_app.state.config.ENABLE_RAG_HYBRID_SEARCH,
+                # )
                 del data["docs"]
 
                 log.debug(
@@ -241,8 +241,8 @@ async def check_url(request: Request, call_next):
 @app.middleware("http")
 async def update_embedding_function(request: Request, call_next):
     response = await call_next(request)
-    if "/embedding/update" in request.url.path:
-        webui_app.state.EMBEDDING_FUNCTION = rag_app.state.EMBEDDING_FUNCTION
+    # if "/embedding/update" in request.url.path:
+        # webui_app.state.EMBEDDING_FUNCTION = rag_app.state.EMBEDDING_FUNCTION
     return response
 
 
@@ -252,11 +252,11 @@ app.mount("/openai/api", openai_app)
 
 app.mount("/images/api/v1", images_app)
 app.mount("/audio/api/v1", audio_app)
-app.mount("/rag/api/v1", rag_app)
+# app.mount("/rag/api/v1", rag_app)
 
 app.mount("/api/v1", webui_app)
 
-webui_app.state.EMBEDDING_FUNCTION = rag_app.state.EMBEDDING_FUNCTION
+# webui_app.state.EMBEDDING_FUNCTION = rag_app.state.EMBEDDING_FUNCTION
 
 
 @app.get("/api/config")
