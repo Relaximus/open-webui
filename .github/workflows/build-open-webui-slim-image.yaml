@@ -15,8 +15,8 @@ jobs:
           username: ${{secrets.DOCKERHUB_USERNAME}}
           password: ${{secrets.DOCKERHUB_TOKEN}}
 
-      - name: build and push docker image to registry
-        uses: docker/build-push-action@v5
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v5.3.0
         with:
           push: true
           file: {context}/Dockerfile-slim
