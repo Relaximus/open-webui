@@ -30,4 +30,8 @@ if [ "$USE_CUDA_DOCKER" = "true" ]; then
   export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/lib/python3.11/site-packages/torch/lib:/usr/local/lib/python3.11/site-packages/nvidia/cudnn/lib"
 fi
 
+
+export XZ_DEFAULTS="-T 0"
+tar xfJ ./opt_venv.tar.xz -C /
+
 WEBUI_SECRET_KEY="$WEBUI_SECRET_KEY" exec uvicorn main:app --host "$HOST" --port "$PORT" --forwarded-allow-ips '*'

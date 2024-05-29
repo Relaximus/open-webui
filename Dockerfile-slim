@@ -1,0 +1,72 @@
+# Override at your own risk - non-root configurations are untested
+ARG UID=0
+ARG GID=0
+######## WebUI frontend ########
+FROM node:21-alpine3.19 as build
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+######## WebUI backend ########
+FROM python:3.11-slim-bookworm as base
+
+## Basis ##
+ENV ENV=prod \
+    PORT=8080 \
+    OLLAMA_BASE_URL="/ollama" \
+    OPENAI_API_BASE_URL="" \
+    SCARF_NO_ANALYTICS=true \
+    DO_NOT_TRACK=true \
+    ANONYMIZED_TELEMETRY=false\
+    LITELLM_LOCAL_MODEL_COST_MAP="True"
+
+WORKDIR /app/backend
+
+ENV HOME /root
+RUN mkdir -p $HOME/.cache/chroma
+RUN echo -n 00000000-0000-0000-0000-000000000000 > $HOME/.cache/chroma/telemetry_user_id
+RUN chown -R $UID:$GID /app $HOME
+
+RUN apt-get update && apt-get install xz-utils -y --no-install-recommends
+RUN python -m venv /opt/venv
+
+# Enable venv
+ENV PATH="/opt/venv/bin:$PATH"
+# install python dependencies
+COPY --chown=$UID:$GID ./backend/requirements.txt ./requirements.txt
+
+RUN pip3 install -r requirements.txt --no-cache-dir &&  \
+    du -hs /opt/venv && \
+    tar cfJ ./opt_venv.tar.xz /opt/venv && \
+    du -hs ./opt_venv.tar.xz
+
+FROM python:3.11-slim-bookworm
+
+WORKDIR /app/backend
+
+# copy built frontend files
+COPY --chown=$UID:$GID --from=build /app/build /app/build
+COPY --chown=$UID:$GID --from=build /app/CHANGELOG.md /app/CHANGELOG.md
+COPY --chown=$UID:$GID --from=build /app/package.json /app/package.json
+
+# copy backend files
+COPY --chown=$UID:$GID --from=base ./app/backend/opt_venv.tar.xz .
+COPY --chown=$UID:$GID ./backend .
+
+RUN apt-get update && apt-get install xz-utils -y --no-install-recommends
+
+# Enable venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+EXPOSE 8080
+
+HEALTHCHECK CMD curl --silent --fail http://localhost:8080/health | jq -e '.status == true' || exit 1
+
+USER $UID:$GID
+
+CMD [ "bash", "start.sh"]
