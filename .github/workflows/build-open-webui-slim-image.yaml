@@ -18,6 +18,7 @@ jobs:
       - name: Build and push Docker images
         uses: docker/build-push-action@v5.3.0
         with:
+          context: .
           push: true
           file: {context}/Dockerfile-slim
           tags: relaximus/open-webui-slim:latest
